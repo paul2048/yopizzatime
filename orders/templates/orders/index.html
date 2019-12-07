@@ -1,0 +1,193 @@
+{% extends "orders/layout.html" %}
+{% load static %}
+{% load crispy_forms_tags %}
+
+{% block main %}
+    <main class="container">
+        <header>
+            <nav class="navbar navbar-expand-lg navbar-light bg-light">
+                <div class="navbar-brand">Yo Pizza Time 🍕</div>
+                
+                <div class="ml-auto d-flex" id="navbar_right_side">
+                    {% comment %} If the user is logged in, display the "shopping cart" and "log out" buttons {% endcomment %}
+                    {% if is_authenticated %}
+                        <button class="btn btn-warning cart_btn" id="show_cart_items" data-toggle="modal" data-target="#shoping_cart_modal">
+                            <img src={% static "images/total_cart.svg" %} alt="cart">
+                        </button>
+                        
+                        <form method="POST" action="{% url 'logout_view' %}">
+                            {% csrf_token %}
+                            <button class="btn btn-outline-danger">Log Out</button>
+                        </form>
+                    {% else %}
+                        <button class="btn btn-outline-success" data-toggle="modal" data-target="#log_reg_modal" data-form="login">Log In</button>
+                        <button class="btn btn-success" data-toggle="modal" data-target="#log_reg_modal" data-form="register">Register</button>
+                    {% endif %}
+                </div>
+            </nav>
+        </header>
+
+        <br>
+
+        <div class="jumbotron">
+            <h1 class="text-center">
+                {% if is_authenticated %}
+                    Welcome back, <span class="text-success">{{ first_name }}</span>!<br>
+                    Add what you want to your cart, and order them!
+                {% else %}
+                    Welcome to <span class="text-success">Yo Pizza Time</span>!<br>
+                    Log in to get your pizza!
+                {% endif %}
+            </h1>
+        </div>
+        
+        {% comment %} Loop through the each item group, e.g: ("pizza", Pizza.objects.all()) {% endcomment %}
+        {% for item_group in items %}
+            <div class="container menu_tables">
+                <div class="row bg-dark text-light table_head">
+                    <div class="col-12">{{ item_group.0 }}s</div>
+                </div>
+                
+                <div class="row bg-light table_body">
+                    {% comment %} Loop through each item in the item group, e.g: Pizza.objects.all() {% endcomment %}
+                    {% for item in item_group.1 %}
+                        <div class="col-12">
+                            <form class="row add_to_cart_form" method="POST">
+                                {% csrf_token %}
+                                <input name="item-name" type="hidden" value="{{ item.name }}">
+                                <div class="col-7 d-flex flex-column justify-content-center">
+                                    <div class="item_name">
+                                        <b>{{ item.name }}</b>
+
+                                        {% comment %} Put "(V)" next to the food name (if vegetarian) {% endcomment %}
+                                        {% if item.vegetarian %}
+                                            (<span class="text-success small">V</span>)
+                                        {% endif %}
+                                    </div>
+
+                                    <div>{{ item.ingredients }}</div>
+
+                                    {% comment %} If the item has toppings (is a pizza) {% endcomment %}
+                                    {% if item.toppings %}
+                                        <div class="text-primary pizza_toppings">
+                                            {% for topping in item.toppings.all %}
+                                                <label>
+                                                    <input name="{{ topping.name }}" type="checkbox">
+                                                    {{ topping.name }} (${{ topping.price }})
+                                                </label>
+                                            {% endfor %}
+                                        </div>
+                                    {% endif %}
+                                </div>
+                                
+                                <div class="col-5 d-flex justify-content-end align-items-center">
+                                    {% comment %} If the item has a large item option, render a "select" {% endcomment %}
+                                    {% if item.has_large %}
+                                        <select class="form-control" name="item-size">
+                                            <option>S</option>
+                                            <option>L</option>
+                                        </select>
+                                    {% endif %}
+
+                                    <div class="ml-2 item_price">${{ item.price }}</div>
+
+                                    <button class="ml-2 btn btn-warning cart_btn add_to_cart_btn" type="submit">
+                                        <img src={% static "images/add_to_cart.svg" %} alt="cart">
+                                    </button>
+                                </div>
+                            </form>
+                        </div>
+                    {% comment %} If the is no item in the item group, for instance no pizza in the pizza menu {% endcomment %}
+                    {% empty %}
+                        <div class="col-12 bg-danger">
+                            <div class="row">
+                                <div class="col-12">
+                                    No {{ item_group.0 }}, bro.
+                                </div>
+                            </div>
+                        </div>
+                    {% endfor %}
+                </div>
+            </div>
+        {% endfor %}
+
+        <footer class="bg-light">
+            <p class="text-center" id="footer-text"><b>(☞ﾟヮﾟ)☞</b> Yo Pizza Time <b>☜(ﾟヮﾟ☜)</b></p>
+        </footer>
+    </main>
+
+    {% if is_authenticated %}
+        {% comment %} Shopping cart modal {% endcomment %}
+        <div class="modal fade" id="shoping_cart_modal">
+            <div class="modal-dialog">
+                <div class="modal-content">
+                    <form id="place_order_form" method="POST" action="{% url 'place_order' %}">
+                        {% csrf_token %}
+                        <div class="modal-header">
+                            <h5 class="modal-title">Shooping Cart</h5>
+
+                            <a class="close" data-dismiss="modal" aria-label="Close">
+                                <span aria-hidden="true">&times;</span>
+                            </a>
+                        </div>
+
+                        <div class="modal-body"></div>
+
+                        <div class="modal-footer">
+                            <button class="btn btn-warning" type="submit">Place Order</button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    {% else %}
+        {% comment %} Login and register modal {% endcomment %}
+        <div class="modal fade" id="log_reg_modal">
+            <div class="modal-dialog">
+                <div class="modal-content">
+                    {% comment %} Log In form {% endcomment %}
+                    <form id="login_form" method="POST" action="{% url 'login' %}">
+                        {% csrf_token %}
+                        <div class="modal-header">
+                            <h5 class="modal-title">Log In</h5>
+
+                            <a class="close" data-dismiss="modal" aria-label="Close">
+                                <span aria-hidden="true">&times;</span>
+                            </a>
+                        </div>
+
+                        <div class="modal-body">
+                            {% comment %} Loads the login form inputs and labels {% endcomment %}
+                            {{ forms.login|crispy }}
+                        </div>
+                        
+                        <div class="modal-footer">
+                            <button class="btn btn-primary" type="submit">Log In</button>
+                        </div>
+                    </form>
+
+                    {% comment %} Register form {% endcomment %}
+                    <form id="register_form" method="POST" action="{% url 'register' %}">
+                        {% csrf_token %}
+                        <div class="modal-header">
+                            <h5 class="modal-title">Register</h5>
+
+                            <a class="close" data-dismiss="modal" aria-label="Close">
+                                <span aria-hidden="true">&times;</span>
+                            </a>
+                        </div>
+
+                        <div class="modal-body">
+                            {% comment %} Loads the register form inputs and labels {% endcomment %}
+                            {{ forms.register|crispy }}
+                        </div>
+
+                        <div class="modal-footer">
+                            <button class="btn btn-primary" type="submit">Register</button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    {% endif %}
+{% endblock %}
