@@ -1,5 +1,5 @@
 # Yo Pizza Time
-Yo Pizza Time is a restaurant with a food delivery service, that makes pizza, pasta and salads. Pizzas can be made either in a normal size or in a big size and all of them can have extra toppings, including salami, Mexican pepper and gorgonzola. Add your desired meals to the shopping cart and place a order!
+Yo Pizza Time is a made-up restaurant with a food delivery service, that makes pizza, pasta and salads. Pizzas can be made either in normal size or in a big size and all of them can have extra toppings. Add your desired meals to the shopping cart and place an imaginary order!
 
 ## orders/migrations/
 The folder contains python files, each representing a migration.
